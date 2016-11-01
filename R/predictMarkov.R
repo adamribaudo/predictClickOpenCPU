@@ -1,44 +1,22 @@
-#' Take some pageviews, output Markov model prediction
+#' Predict next page based on all page views in the current session
 #'
-#' @param pageview_names A character vector of pageview names
-#'
-#' @return The prediction
-#' @import clickstream
-#' @export
-predictMarkov <- function(pageview_names) {
-
-  ## mc loaded on package load
-  states <- invisible(clickstream::states(model))
-
-  pv_n <- pageview_names[pageview_names %in% states]
-
-  startPattern <- new("Pattern", sequence = pv_n)
-
-  predit <- predict(model, startPattern)
-
-  list(page = predit@sequence,
-       probability = predit@probability)
-}
-
-#' Predict next page model 2
-#'
-#' @param current_url the url to predict from
+#' @param session_urls an array of all urls visited during the current session. In sequence.
 #' @export
 #' @import markovchain
-predictNextPage <- function(current_url){
+predictNextPageMarkov <- function(session_urls){
 
-  current_url <- current_url[!grepl("undefined", current_url)]
+  session_urls <- session_urls[!grepl("undefined", session_urls)]
 
-  message("Predicting next page for ", current_url)
+  message("Predicting next page for ", session_urls)
 
   markovList <-  mcfL$estimate
-  out <- try(predict(markovList, newdata = current_url), silent = TRUE)
+  out <- try(predict(markovList, newdata = session_urls), silent = TRUE)
 
   if(inherits(out, "try-error")){
 
     ## try just with last page
-    ll <- length(current_url)
-    retry_urls <- current_url[ll]
+    ll <- length(session_urls)
+    retry_urls <- session_urls[ll]
     out <- try(predict(markovList, newdata = retry_urls), silent = TRUE)
 
     if(inherits(out, "try-error")){
@@ -50,75 +28,27 @@ predictNextPage <- function(current_url){
   out
 }
 
-
-#' Replace a string with substitutions
+#' Predict next page based on all page views in the current session
 #'
-#' @param string_vector vector of (URL) strings
-#' @param findme Regex or string to find to replace
-#' @param replace What to replace with. If NULL, uses findme string
-#' @param fixed IF FALSE, findme is regex, if not a fixed match
-#'
-#' @return string_vector with replacements if required
+#' @param current_page The current page that the user is visiting. We will predict their next page by looking at the previous page data in GA
 #' @export
-cleanURL <- function(string_vector, findme, replace=NULL, fixed=TRUE){
-
-  if(is.null(replace)) {
-    replace <- findme
-  } else {
-    replace <- replace
-  }
-
-  if(fixed) findme <- stringr::fixed(findme)
-
-  string_vector[stringr::str_detect(string_vector, findme)] <- replace
-
-  string_vector
+#' @import
+getNextPageFromPrevPage <- function(current_page)
+{
+  pages <- data[ga.data$previousPagePath == prevPage & ga.data$pagePath != prevPage, ]
+  out <- pages[1,c("pagePath")]
+  out
+  #TODO also output the probability based on sum of pageviews
+  #TODO handle NA output
 }
 
-
-#' Specific client aggregation
+#' Test function
 #'
-#' @param string_vector URLs to clean
-#'
-#' @return The string_vector with substitutions made
+#' @param test_text
 #' @export
-aggregateVD <- function(string_vector){
+#' @import
 
-  string_vector <- as.character(string_vector)
-
-  # string_vector[str_detect(string_vector[,pagePath_name], "[0-9]$"),"aggregation"] <- "holiday_listing"
-  string_vector <- cleanURL(string_vector, "[0-9]$", replace = "holiday_listing", fixed=FALSE)
-  string_vector <- cleanURL(string_vector, "search/result", replace = "search_result")
-  string_vector <- cleanURL(string_vector, "?", "site_search")
-  string_vector <- cleanURL(string_vector, "blog")
-  string_vector <- cleanURL(string_vector, "employees-list", replace = "employees")
-  string_vector <- cleanURL(string_vector, "booking")
-  string_vector <- cleanURL(string_vector, "geography")
-  string_vector <- cleanURL(string_vector, "interest")
-  string_vector <- cleanURL(string_vector, "dragoer")
-  string_vector <- cleanURL(string_vector, "aktiviteter")
-  string_vector <- cleanURL(string_vector, "product")
-  string_vector <- cleanURL(string_vector, "feriecentre")
-  string_vector <- cleanURL(string_vector, "gastronomi")
-  string_vector <- cleanURL(string_vector, "aktiviteter")
-  string_vector <- cleanURL(string_vector, "natur")
-  string_vector <- cleanURL(string_vector, "fur")
-  string_vector <- cleanURL(string_vector, "begivenheder")
-  string_vector <- cleanURL(string_vector, "season")
-  string_vector <- cleanURL(string_vector, "sydjylland")
-  string_vector <- cleanURL(string_vector,  "vestjylland")
-  string_vector <- cleanURL(string_vector, "sydsjaelland")
-  string_vector <- cleanURL(string_vector, "publikationer")
-  string_vector <- cleanURL(string_vector, "oestjylland")
-  string_vector <- cleanURL(string_vector, "nordjylland")
-  string_vector <- cleanURL(string_vector, "koebenhavn")
-  string_vector <- cleanURL(string_vector, "tyskland")
-  string_vector <- cleanURL(string_vector, "sverige")
-  string_vector <- cleanURL(string_vector, "sport")
-  string_vector <- cleanURL(string_vector, "norge")
-  string_vector <- cleanURL(string_vector, "historie")
-  string_vector <- cleanURL(string_vector, "england")
-
-  string_vector
+test <- function(test_text)
+{
+  test_text
 }
-
