@@ -47,7 +47,6 @@ getNextPageFromPrevPage <- function(current_page)
 #' @param test_text
 #' @export
 #' @import
-
 test <- function(test_text)
 {
   test_text
